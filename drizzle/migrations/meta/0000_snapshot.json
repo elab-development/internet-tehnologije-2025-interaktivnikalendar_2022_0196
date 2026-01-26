@@ -1,0 +1,385 @@
+{
+  "version": "5",
+  "dialect": "mysql",
+  "id": "4b2a4e98-943a-4ed5-8f53-3936465212c3",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "category": {
+      "name": "category",
+      "columns": {
+        "idCategory": {
+          "name": "idCategory",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "naziv": {
+          "name": "naziv",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "boja": {
+          "name": "boja",
+          "type": "varchar(7)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'#787a7c'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "category_idCategory": {
+          "name": "category_idCategory",
+          "columns": [
+            "idCategory"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "event": {
+      "name": "event",
+      "columns": {
+        "idEvent": {
+          "name": "idEvent",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "naziv": {
+          "name": "naziv",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "pocetakDogadjaja": {
+          "name": "pocetakDogadjaja",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "krajDogadjaja": {
+          "name": "krajDogadjaja",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "opis": {
+          "name": "opis",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "vazan": {
+          "name": "vazan",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "privatnost": {
+          "name": "privatnost",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'privatan'"
+        },
+        "idUser": {
+          "name": "idUser",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "idCategory": {
+          "name": "idCategory",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "event_idUser_user_idUser_fk": {
+          "name": "event_idUser_user_idUser_fk",
+          "tableFrom": "event",
+          "tableTo": "user",
+          "columnsFrom": [
+            "idUser"
+          ],
+          "columnsTo": [
+            "idUser"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "event_idCategory_category_idCategory_fk": {
+          "name": "event_idCategory_category_idCategory_fk",
+          "tableFrom": "event",
+          "tableTo": "category",
+          "columnsFrom": [
+            "idCategory"
+          ],
+          "columnsTo": [
+            "idCategory"
+          ],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "event_idEvent": {
+          "name": "event_idEvent",
+          "columns": [
+            "idEvent"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "notification": {
+      "name": "notification",
+      "columns": {
+        "idNotification": {
+          "name": "idNotification",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "zakazanoVreme": {
+          "name": "zakazanoVreme",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "status": {
+          "name": "status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "vremenskiOffset": {
+          "name": "vremenskiOffset",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "idEvent": {
+          "name": "idEvent",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "idUser": {
+          "name": "idUser",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "notification_idEvent_event_idEvent_fk": {
+          "name": "notification_idEvent_event_idEvent_fk",
+          "tableFrom": "notification",
+          "tableTo": "event",
+          "columnsFrom": [
+            "idEvent"
+          ],
+          "columnsTo": [
+            "idEvent"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "notification_idUser_user_idUser_fk": {
+          "name": "notification_idUser_user_idUser_fk",
+          "tableFrom": "notification",
+          "tableTo": "user",
+          "columnsFrom": [
+            "idUser"
+          ],
+          "columnsTo": [
+            "idUser"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "notification_idNotification": {
+          "name": "notification_idNotification",
+          "columns": [
+            "idNotification"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "recurrence": {
+      "name": "recurrence",
+      "columns": {
+        "idRecurrence": {
+          "name": "idRecurrence",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "tip": {
+          "name": "tip",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "krajPonavljanja": {
+          "name": "krajPonavljanja",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "daniUNedelji": {
+          "name": "daniUNedelji",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "idEvent": {
+          "name": "idEvent",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "recurrence_idEvent_event_idEvent_fk": {
+          "name": "recurrence_idEvent_event_idEvent_fk",
+          "tableFrom": "recurrence",
+          "tableTo": "event",
+          "columnsFrom": [
+            "idEvent"
+          ],
+          "columnsTo": [
+            "idEvent"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {
+        "recurrence_idRecurrence": {
+          "name": "recurrence_idRecurrence",
+          "columns": [
+            "idRecurrence"
+          ]
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraint": {}
+    },
+    "user": {
+      "name": "user",
+      "columns": {
+        "idUser": {
+          "name": "idUser",
+          "type": "int",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": true
+        },
+        "ime": {
+          "name": "ime",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "prezime": {
+          "name": "prezime",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "password": {
+          "name": "password",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "userRole": {
+          "name": "userRole",
+          "type": "enum('ADMIN','REGISTROVANI_USER','GOST')",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'REGISTROVANI_USER'"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "user_idUser": {
+          "name": "user_idUser",
+          "columns": [
+            "idUser"
+          ]
+        }
+      },
+      "uniqueConstraints": {
+        "user_email_unique": {
+          "name": "user_email_unique",
+          "columns": [
+            "email"
+          ]
+        }
+      },
+      "checkConstraint": {}
+    }
+  },
+  "views": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "tables": {},
+    "indexes": {}
+  }
+}
