@@ -23,7 +23,7 @@ export const user = mysqlTable("user", {
   ime: varchar("ime", { length: 20 }).notNull(),
   prezime: varchar("prezime", { length: 20 }).notNull(),
   email: varchar("email", { length: 255 }).notNull().unique(),
-  password: varchar("password", { length: 255 }).notNull(),
+  passHash: varchar("password", { length: 255 }).notNull(),
   userRole: UserRole.notNull().default("REGISTROVANI_USER"),
 });
 
