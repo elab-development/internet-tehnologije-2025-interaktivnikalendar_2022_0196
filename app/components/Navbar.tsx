@@ -3,6 +3,7 @@ import Link from 'next/link'
 import React from 'react'
 import { FiCalendar } from 'react-icons/fi'
 import { usePathname } from 'next/navigation'
+import Button from './Button'
 
 const Navbar = () => {
 
@@ -16,6 +17,7 @@ const Navbar = () => {
 
   return (
     <nav className='w-full flex justify-center mt-10'>
+      <div className='flex items-stretch gap-60'> 
        
         {/*navbar kapsula */}
         <div className='bg-white rounded-full shadow-lg px-8 py-3 flex items-center gap-8'>
@@ -44,6 +46,23 @@ const Navbar = () => {
         </ul>
 
         </div>
+
+        {/*Auth kapsula */}
+        <div className='bg-white rounded-full shadow-lg px-8 py-3 flex items-center gap-3'>
+          <Button
+          variant='login'
+          label='Prijavi se'
+          href='/prijava'
+
+          />
+          <Button
+          variant='register'
+          label='Registruj se'
+          href='/registracija'
+          />
+        </div>
+
+      </div>
     </nav>
 
   )
