@@ -152,7 +152,7 @@ export async function DELETE(
       );
     }
 
-    await db.delete(event).where(eq(event.idUser, userId));
+    await db.delete(event).where(eq(event.idEvent, eventId));
 
     return NextResponse.json(
       {
