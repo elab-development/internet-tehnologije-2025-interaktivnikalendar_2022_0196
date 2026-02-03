@@ -19,7 +19,7 @@ export default function Home() {
           </p>
           <Button
             label="Otvori kalendar"
-            href="/kalendar"
+            href="/login"
             variant="login"
             type="button"
             className="w-[40%] text-center py-3 text-[18px]"
@@ -117,7 +117,7 @@ export default function Home() {
         <div className="mt-6 text-center">
           <Button
             label="Otvori kalendar"
-            href="/kalendar"
+            href="/login"
             variant="register"
             className="py-4"
           />

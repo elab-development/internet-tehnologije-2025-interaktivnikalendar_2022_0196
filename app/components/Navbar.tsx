@@ -51,7 +51,7 @@ const Navbar = () => {
             </li>
 
             <li>
-              <Link href={isLoggedIn ? ("/o-nama") : ("/login")} className={linkClass("/o-nama")}>
+              <Link href="/o-nama" className={linkClass("/o-nama")}>
                 O nama
               </Link>
             </li>
