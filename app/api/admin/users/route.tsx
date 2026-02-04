@@ -53,5 +53,10 @@ export async function GET(req: Request) {
 
     return NextResponse.json({ users: allUsers });
 
-  } catch (error) {}
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Greška pri prikazivanju korisnika" },
+      { status: 500 },
+    );
+  }
 }

@@ -6,4 +6,5 @@ export interface Event {
   opis: string;
   vazan: boolean;
   privatnost: string;
+  idCategory: number | null;
 }

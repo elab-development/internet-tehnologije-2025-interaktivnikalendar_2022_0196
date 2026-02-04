@@ -1,4 +1,4 @@
-import 'dotenv/config'
+import "dotenv/config";
 import { db } from "./index";
 import * as schema from "./schema";
 
@@ -34,12 +34,12 @@ async function seed() {
 
     // kategorije
     await db.insert(schema.category).values([
-      { naziv: "Posao", boja: "#3b82f6" },
-      { naziv: "Lično", boja: "#10b981" },
-      { naziv: "Trening", boja: "#f59e0b" },
-      { naziv: "Sastanci", boja: "#ef4444" },
-      { naziv: "Porodica", boja: "#8b5cf6" },
-      { naziv: "Učenje", boja: "#06b6d4" },
+      { naziv: "Posao", boja: "#ffb3ba" },
+      { naziv: "Lično", boja: "#ffdfba" },
+      { naziv: "Trening", boja: "#ffffba" },
+      { naziv: "Sastanci", boja: "#baffc9" },
+      { naziv: "Porodica", boja: "#bae1ff" },
+      { naziv: "Učenje", boja: "#d58eb6" },
     ]);
     const categories = await db.select().from(schema.category);
 
@@ -134,13 +134,13 @@ async function seed() {
     //recuring
     await db.insert(schema.recurrence).values([
       {
-        tip: "weekly",
+        tipPonavljanja: "weekly",
         krajPonavljanja: new Date("2026-12-31 23:59:59"),
         daniUNedelji: "MON,WED,FRI",
         idEvent: events[1].idEvent,
       },
       {
-        tip: "daily",
+        tipPonavljanja: "daily",
         krajPonavljanja: new Date("2026-03-31 23:59:59"),
         daniUNedelji: "MON,TUE,WED,THU,FRI",
         idEvent: events[3].idEvent,

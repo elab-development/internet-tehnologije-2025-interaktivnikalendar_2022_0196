@@ -5,6 +5,12 @@ import Button from "./Button";
 import EventModal from "./EventModal";
 import { Event } from "@/types/event";
 
+interface Category {
+  idCategory: number;
+  naziv: string;
+  boja: string;
+}
+
 export default function Kalendar() {
   const daysOfWeek = ["Pon", "Uto", "Sre", "Čet", "Pet", "Sub", "Ned"];
   const today = new Date();
@@ -41,12 +47,15 @@ export default function Kalendar() {
   );
 
   const [events, setEvents] = useState<Event[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]); // DODATO
   const [loading, setLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(false); // DODATO
 
+  // Fetch događaja
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const response = await fetch("/api/auth/events", {
+      const response = await fetch("/api/events", {
         credentials: "include",
       });
 
@@ -56,14 +65,12 @@ export default function Kalendar() {
 
       const data = await response.json();
 
-      //ako vrati kao niz
       if (Array.isArray(data)) {
         setEvents(data);
       } else if (data.events && Array.isArray(data.events)) {
-        //ako vrati kao objekat koji sadrzi niz
         setEvents(data.events);
       } else {
-        setEvents([]); //ako se desi greska
+        setEvents([]);
       }
     } catch (error) {
       console.error("Greška:", error);
@@ -73,9 +80,55 @@ export default function Kalendar() {
     }
   };
 
+  // Fetch kategorija
+  const fetchCategories = async () => {
+    setCategoriesLoading(true);
+    try {
+      const response = await fetch("/api/categories", {
+        credentials: "include",
+      });
+
+      if (!response.ok) {
+        throw new Error("Greška pri učitavanju kategorija");
+      }
+
+      const data = await response.json();
+      setCategories(data.category || []);
+    } catch (error) {
+      console.error("Greška pri učitavanju kategorija:", error);
+      setCategories([]);
+    } finally {
+      setCategoriesLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchEvents(); //da se fetchuje smao jednom kad se ucita komponenta
+    fetchEvents();
+    fetchCategories();
   }, []);
+
+  //za vracanje boje kategorije
+  const getCategoryColor = (event: Event): string => {
+    if (!event.idCategory) return "#e5e7eb"; 
+    
+    const category = categories.find(cat => cat.idCategory === event.idCategory);
+    return category?.boja || "#e5e7eb";
+  };
+
+  // Funkcija za određivanje boje teksta na osnovu pozadine
+  const getTextColor = (backgroundColor: string): string => {
+    // Konvertuj hex u RGB
+    const hex = backgroundColor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    
+    // Izracunaj luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    // Ako je pozadina svetla koristi crni tekst inace beli
+    return luminance > 0.5 ? '#000000' : '#ffffff';
+  };
 
   const getEventsForDay = (day: number) => {
     const filtered = events.filter((event) => {
@@ -152,25 +205,34 @@ export default function Kalendar() {
             <p className="text-gray-500 text-sm italic">Nema događaja</p>
           ) : (
             <div className="space-y-3">
-              {events.map((event) => (
-                <div
-                  key={event.idEvent}
-                  className="p-3 bg-gray-50 rounded-lg hover:bg-gray-100 cursor-pointer"
-                  onClick={() => openUpdateModal(event)}
-                >
-                  <h3 className="font-semibold text-gray-800">{event.naziv}</h3>
-                  <p className="text-xs text-gray-500">
-                    {new Date(event.pocetakDogadjaja).toLocaleDateString(
-                      "sr-RS",
+              {events.map((event) => {
+                const categoryColor = getCategoryColor(event);
+                const textColor = getTextColor(categoryColor);
+                
+                return (
+                  <div
+                    key={event.idEvent}
+                    className="p-3 rounded-lg hover:opacity-90 cursor-pointer transition-all"
+                    style={{
+                      backgroundColor: categoryColor,
+                      color: textColor,
+                    }}
+                    onClick={() => openUpdateModal(event)}
+                  >
+                    <h3 className="font-semibold">{event.naziv}</h3>
+                    <p className="text-xs opacity-90">
+                      {new Date(event.pocetakDogadjaja).toLocaleDateString(
+                        "sr-RS",
+                      )}
+                    </p>
+                    {event.vazan && (
+                      <span className="text-xs font-bold">
+                        ⭐ Važan
+                      </span>
                     )}
-                  </p>
-                  {event.vazan && (
-                    <span className="text-xs text-red-500 font-bold">
-                      ⭐ Važan
-                    </span>
-                  )}
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
@@ -267,7 +329,7 @@ export default function Kalendar() {
                 <div
                   key={`day-${i}`}
                   className={`flex flex-col justify-start items-start p-2 border rounded-xl text-sm cursor-pointer transition min-h-[100px]
-                    ${isToday ? "border-pink-500 border-4" : "hover:bg-pink-100"}`}
+                    ${isToday ? "border-pink-500 border-4" : "hover:bg-pink-50"}`}
                 >
                   <p className="font-bold text-gray-500 text-base mb-1">
                     {day}
@@ -280,23 +342,32 @@ export default function Kalendar() {
                   )}
 
                   <div className="w-full space-y-1">
-                    {dayEvents.map((event) => (
-                      <div
-                        key={event.idEvent}
-                        className={`text-xs p-1 rounded truncate ${
-                          event.vazan
-                            ? "bg-red-100 text-red-700 font-semibold"
-                            : "bg-blue-100 text-blue-700"
-                        }`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openUpdateModal(event);
-                        }}
-                        title={event.naziv}
-                      >
-                        {event.naziv}
-                      </div>
-                    ))}
+                    {dayEvents.map((event) => {
+                      const categoryColor = getCategoryColor(event);
+                      const textColor = getTextColor(categoryColor);
+                      
+                      return (
+                        <div
+                          key={event.idEvent}
+                          className={`text-xs p-1 rounded truncate ${
+                            event.vazan
+                              ? "border-2 border-red-500" 
+                              : ""
+                          }`}
+                          style={{
+                            backgroundColor: categoryColor,
+                            color: textColor,
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openUpdateModal(event);
+                          }}
+                          title={event.naziv}
+                        >
+                          {event.naziv}
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               );
@@ -312,7 +383,8 @@ export default function Kalendar() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSuccess={() => {
-            fetchEvents(); //da refreshuje kalendar nakon izmene
+            fetchEvents(); 
+            fetchCategories(); 
           }}
         />
       )}

@@ -27,11 +27,51 @@ export default function EventModal({
     opis: "",
     vazan: false,
     privatnost: "privatan",
+    idCategory: 0, // 0 za frontend = null za backend
   });
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [categories, setCategories] = useState<
+    { idCategory: number; naziv: string; boja: string }[]
+  >([]);
+
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
+
+  // FETCH KATEGORIJA
+  useEffect(() => {
+    const fetchCategories = async () => {
+      if (!isOpen) return;
+
+      setCategoriesLoading(true);
+      try {
+        const response = await fetch(`/api/categories`, {
+          credentials: "include",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Greška pri učitavanju kategorija");
+        }
+
+        setCategories(data.category || []);
+      } catch (err: any) {
+        console.error("Greška pri učitavanju kategorija:", err);
+        setError(err.message);
+      } finally {
+        setCategoriesLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, [isOpen]);
+
+  const formatDateTimeLocal = (isoString: string) => {
+    if (!isoString) return "";
+    return isoString.slice(0, 16);
+  };
 
   // DELETE funkcija
   const handleDelete = async () => {
@@ -43,8 +83,7 @@ export default function EventModal({
     setError("");
 
     try {
-
-      const response = await fetch(`/api/auth/events/${eventData.idEvent}`, {
+      const response = await fetch(`/api/events/${eventData.idEvent}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -68,23 +107,22 @@ export default function EventModal({
     }
   };
 
-  const formatDateTimeLocal = (isoString: string) => {
-    if (!isoString) return "";
-    return isoString.slice(0, 16); //konverzija za prikaz na formi
-  };
-
   // Popuni formu ako je UPDATE mod
   useEffect(() => {
-    if (mode === "update" && eventData) {
+    if (mode === "update" && eventData && categories.length > 0) {
+      //null iz baze u 0 za frontend formu
+      const categoryId = eventData.idCategory === null ? 0 : eventData.idCategory;
+
       setFormData({
-        naziv: eventData.naziv,
-        pocetakDogadjaja: formatDateTimeLocal(eventData.pocetakDogadjaja), 
-        krajDogadjaja: formatDateTimeLocal(eventData.krajDogadjaja), 
-        opis: eventData.opis,
-        vazan: eventData.vazan,
-        privatnost: eventData.privatnost,
+        naziv: eventData.naziv || "",
+        pocetakDogadjaja: formatDateTimeLocal(eventData.pocetakDogadjaja) || "",
+        krajDogadjaja: formatDateTimeLocal(eventData.krajDogadjaja) || "",
+        opis: eventData.opis || "",
+        vazan: eventData.vazan || false,
+        privatnost: eventData.privatnost || "privatan",
+        idCategory: categoryId,
       });
-    } else {
+    } else if (mode === "create") {
       setFormData({
         naziv: "",
         pocetakDogadjaja: "",
@@ -92,9 +130,10 @@ export default function EventModal({
         opis: "",
         vazan: false,
         privatnost: "privatan",
+        idCategory: 0,
       });
     }
-  }, [mode, eventData, isOpen]);
+  }, [mode, eventData, categories, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,13 +141,23 @@ export default function EventModal({
     setError("");
 
     try {
-      // CREATE ili UPDATE zahtev
       const url =
-        mode === "create"
-          ? "/api/auth/events"
-          : `/api/auth/events/${eventData?.idEvent}`;
+        mode === "create" ? "/api/events" : `/api/events/${eventData?.idEvent}`;
 
       const method = mode === "create" ? "POST" : "PUT";
+
+      //0 iz forme u null za backend
+      const payload = {
+        naziv: formData.naziv,
+        pocetakDogadjaja: formData.pocetakDogadjaja,
+        krajDogadjaja: formData.krajDogadjaja,
+        opis: formData.opis,
+        vazan: formData.vazan,
+        privatnost: formData.privatnost,
+        idCategory: formData.idCategory || null,
+      };
+
+      console.log("Sending payload:", payload);
 
       const response = await fetch(url, {
         method,
@@ -116,7 +165,7 @@ export default function EventModal({
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -132,7 +181,6 @@ export default function EventModal({
       onSuccess();
       onClose();
 
-      // Resetuj formu samo u CREATE modu
       if (mode === "create") {
         setFormData({
           naziv: "",
@@ -141,6 +189,7 @@ export default function EventModal({
           opis: "",
           vazan: false,
           privatnost: "privatan",
+          idCategory: 0,
         });
       }
     } catch (err: any) {
@@ -218,7 +267,7 @@ export default function EventModal({
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Opis</label>
             <textarea
-              value={formData.opis}
+              value={formData.opis || ""}
               onChange={(e) =>
                 setFormData({ ...formData, opis: e.target.value })
               }
@@ -256,6 +305,36 @@ export default function EventModal({
             </select>
           </div>
 
+          {/* Kategorija */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">Kategorija</label>
+            <select
+              value={formData.idCategory}
+              onChange={(e) =>
+                setFormData({
+                  ...formData,
+                  idCategory: parseInt(e.target.value),
+                })
+              }
+              className="bg-white w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-black focus:border-2 outline-none"
+              required
+              disabled={categoriesLoading}
+            >
+              <option value="0">
+                {categoriesLoading
+                  ? "Učitavanje kategorija..."
+                  : "Izaberite kategoriju"}
+              </option>
+              {categories
+                .filter((cat) => cat && cat.idCategory != null)
+                .map((cat) => (
+                  <option key={cat.idCategory} value={cat.idCategory}>
+                    {cat.naziv}
+                  </option>
+                ))}
+            </select>
+          </div>
+
           {error && (
             <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
               ⚠️ {error}
@@ -263,14 +342,13 @@ export default function EventModal({
           )}
 
           <div className="flex gap-3 justify-between">
-            {/* DELETE dugme - samo u update modu */}
             {mode === "update" && eventData && (
               <Button
                 label="Obriši"
                 onClick={() => setShowDeleteConfirm(true)}
                 variant="login"
                 type="button"
-                className="w-[30%] bg-red-600 hover:bg-red-700 text-white"
+                className="w-[30%] bg-red hover:bg-red-300 text-black"
                 disabled={loading}
               />
             )}
@@ -293,10 +371,11 @@ export default function EventModal({
             />
           </div>
         </form>
+
         {/* CONFIRMATION DIALOG za brisanje */}
         {showDeleteConfirm && (
           <div
-            className="fixed inset-0 bg-transparen flex items-center justify-center z-[60]"
+            className="fixed inset-0 bg-transparent flex items-center justify-center z-[60]"
             onClick={() => setShowDeleteConfirm(false)}
           >
             <div
