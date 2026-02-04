@@ -8,6 +8,7 @@ import {
   datetime,
   boolean,
   timestamp,
+  unique,
 } from "drizzle-orm/mysql-core";
 
 //enum za user-a
@@ -31,8 +32,11 @@ export const user = mysqlTable("user", {
 export const category = mysqlTable("category", {
   idCategory: int("idCategory").primaryKey().autoincrement(),
   naziv: varchar("naziv", { length: 255 }).notNull(),
-  boja: varchar("boja", { length: 7 }).notNull().default("#787a7c"),
-});
+  boja: varchar("boja", { length: 20 }).notNull().default("#787a7c"),
+}, (table) => ({
+  // UNIQUE constraint - naziv kategorije mora biti jedinstven
+  uniqueNaziv: unique("unique_category_naziv").on(table.naziv),
+}));
 
 //tabela event
 export const event = mysqlTable("event", {
@@ -70,7 +74,7 @@ export const notification = mysqlTable("notification", {
 //tabela recurrence
 export const recurrence = mysqlTable("recurrence", {
   idRecurrence: int("idRecurrence").primaryKey().autoincrement(),
-  tip: varchar("tip", { length: 50 }).notNull(),
+  tipPonavljanja: varchar("tipPonavljanja", { length: 50 }).notNull(),
   krajPonavljanja: timestamp("krajPonavljanja").notNull(),
   daniUNedelji: varchar("daniUNedelji",{length: 100}).notNull(),
   idEvent: int("idEvent")

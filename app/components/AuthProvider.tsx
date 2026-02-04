@@ -59,6 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     setState({ status: "unauthenticated", user: null });
     router.refresh();
+    router.push("/");
   };
 
   useEffect(() => {

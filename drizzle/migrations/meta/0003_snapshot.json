@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "cbe10069-37e0-4690-b8c6-392a93d3c77e",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "6df226f5-7edb-491b-b278-69d93768e836",
+  "prevId": "4a02d1ec-ca12-4787-9539-12e243069aa8",
   "tables": {
     "category": {
       "name": "category",
@@ -23,7 +23,7 @@
         },
         "boja": {
           "name": "boja",
-          "type": "varchar(7)",
+          "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
@@ -40,7 +40,14 @@
           ]
         }
       },
-      "uniqueConstraints": {},
+      "uniqueConstraints": {
+        "unique_category_naziv": {
+          "name": "unique_category_naziv",
+          "columns": [
+            "naziv"
+          ]
+        }
+      },
       "checkConstraint": {}
     },
     "event": {
@@ -248,8 +255,8 @@
           "notNull": true,
           "autoincrement": true
         },
-        "tip": {
-          "name": "tip",
+        "tipPonavljanja": {
+          "name": "tipPonavljanja",
           "type": "varchar(50)",
           "primaryKey": false,
           "notNull": true,

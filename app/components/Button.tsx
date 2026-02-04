@@ -9,15 +9,17 @@ interface ButtonProps {
   variant?: 'login' | 'register' | 'add' | 'edit' | 'delete';
   type?: 'button' | 'submit' | 'reset';
   className?: string;
+  disabled?: boolean;
 }
 
 const Button = ({
     label, 
-    onClick, 
+    onClick , 
     href,
     variant = 'login',
     type = 'button',
-    className = ''
+    className = '',
+    disabled
 }:ButtonProps)  => {   //Koristimo definiciju tipova odozgo iz interfejsa 
 
   const styles = {

@@ -8,6 +8,8 @@ type InputProps = {
   placeholder?: string;
   autoComplete?: string;
   required?: boolean;
+  className?: string;
+  
 };
 
 export default function Input({
@@ -18,6 +20,7 @@ export default function Input({
   placeholder,
   autoComplete,
   required,
+  className,
 }: InputProps) {
   return (
     <div>
@@ -29,7 +32,7 @@ export default function Input({
         placeholder={placeholder}
         autoComplete={autoComplete}
         required={required}
-        className="p-2 w-full border border-gray-300 focus:border-black focus:border-2 outline-none rounded-md shadow-xs"
+        className={`p-2 w-full border border-gray-300 focus:border-black focus:border-2 outline-none rounded-md shadow-xs ${className || ""}`}
       />
     </div>
   );
