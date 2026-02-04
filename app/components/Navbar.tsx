@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import Button from "./Button";
 import { useAuth } from "./AuthProvider";
 import { RiUser3Line } from "react-icons/ri";
+import { useRouter } from "next/router";
 
 const Navbar = () => {
   const pathname = usePathname();
@@ -23,6 +24,7 @@ const Navbar = () => {
   const handleLogout = async () => {
     await logout();
     setDropdownOpen(false);
+  
   };
 
   return (
@@ -45,14 +47,38 @@ const Navbar = () => {
             </li>
 
             <li>
-              <Link href={isLoggedIn ? ("/kalendar") : ("/login")} className={linkClass("/kalendar")}>
-               Kalendar
+              <Link
+                href={isLoggedIn ? "/kalendar" : "/login"}
+                className={linkClass("/kalendar")}
+              >
+                Kalendar
               </Link>
             </li>
 
             <li>
               <Link href="/o-nama" className={linkClass("/o-nama")}>
                 O nama
+              </Link>
+            </li>
+
+            <li>
+              <Link
+                href={
+                  isLoggedIn && user?.userRole === "ADMIN"
+                    ? "/userPreview"
+                    : "/login"
+                }
+                className={linkClass("/kalendar")}
+                onClick={(e) => {
+                  if (user?.userRole !== "ADMIN") {
+                    e.preventDefault();
+                    alert(
+                      "Morate biti admin kako biste imali pristup svim korisnicima",
+                    );
+                  }
+                }}
+              >
+                Korisnici
               </Link>
             </li>
           </ul>
@@ -69,7 +95,9 @@ const Navbar = () => {
                 onClick={() => setDropdownOpen((prev) => !prev)}
               >
                 <RiUser3Line className="h-6 w-6 mr-4" />
-                <h3 className="font-semibold text-lg">{user.ime} {user.prezime}</h3>
+                <h3 className="font-semibold text-lg">
+                  {user.ime} {user.prezime}
+                </h3>
               </button>
 
               {/* Dropdown meni */}
