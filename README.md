@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Interaktivni kalendar
 
-## Getting Started
+Ovo je **interaktivni web kalendar** napravljen u React-u i Tailwind CSS-u sa podrškom za događaje, mesece, godine i važnost događaja.
 
-First, run the development server:
+---
 
-```bash
+## Tehnologije
+- **React / TypeScript** – frontend logika
+- **Tailwind CSS** – stilizacija i layout
+- **JavaScript / TypeScript** – dinamički prikaz i logika
+- **Bcrypt** – bezbedno hashovanje lozinki 
+- **Fetch API** – komunikacija sa backendom (login / register / events)
+- **Cookies / httpOnly** – autentifikacija i sigurnost
+- **Next.js API routes** – backend API
+
+---
+
+## Funkcionalnosti
+
+### 1. Kalendar
+- Prikaz dana u nedelji i dana u mesecu
+- Prazni div-ovi za pomeranje prvog dana meseca
+- Dinamičko renderovanje svih dana u mesecu
+- Isticanje današnjeg dana 
+
+### 2. Događaji
+- Dodavanje, prikaz i označavanje važnih događaja
+- Boja događaja po kategoriji i kontrastna boja teksta
+- Usable događaji sa modalom za uređivanje
+- Prikaz broja događaja po danu
+
+### 3. Mesečni i godišnji dropdown
+- Custom dropdown za izbor meseca i godine
+- Zatvaranje dropdown-a nakon izbora
+- Dinamičko menjanje trenutnog meseca i godine
+
+### 4. Autentifikacija (ako implementirana)
+- Login / Register forme
+- Bcrypt hashovanje lozinki
+- `httpOnly` cookies za sigurnost
+- AutoComplete atribut za login / register polja
+
+---
+
+## Instalacija i pokretanje
+
+1. Kloniraj repozitorijum:
+git clone <URL_REPO>
+
+2.Instaliranje zavisnoti
+npm install
+
+3.Pokretanje servera
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4. Otvaranje web aplikacije 
+http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
