@@ -50,4 +50,4 @@ next-env.d.ts
 mysql_data/
 docker-compose.override.yml
 *.sql
-!migrations/*.sql
+migrations/*.sql
