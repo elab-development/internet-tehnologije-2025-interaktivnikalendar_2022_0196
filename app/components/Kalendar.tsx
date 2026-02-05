@@ -37,8 +37,8 @@ export default function Kalendar() {
   const years = Array.from({ length: 11 }, (_, i) => 2026 + i);
 
   const firstDayOfMonth =
-    (new Date(currentYear, currentMonth, 1).getDay() + 6) % 7;
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    (new Date(currentYear, currentMonth, 1).getDay() + 6) % 7; //prvi dan
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate(); //poslednji dan odnosno broj dana
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<"create" | "update">("create");
@@ -47,9 +47,9 @@ export default function Kalendar() {
   );
 
   const [events, setEvents] = useState<Event[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]); // DODATO
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [categoriesLoading, setCategoriesLoading] = useState(false); // DODATO
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
 
   // Fetch događaja
   const fetchEvents = async () => {
@@ -313,7 +313,7 @@ export default function Kalendar() {
 
           <div className="grid grid-cols-7 gap-2 flex-1">
             {Array.from({ length: firstDayOfMonth }).map((_, i) => (
-              <div key={`empty-${i}`} />
+              <div key={`empty-${i}`} /> //kreiranje praxnih divova za dane pre prvog
             ))}
 
             {Array.from({ length: daysInMonth }, (_, i) => {

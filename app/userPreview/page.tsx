@@ -18,7 +18,7 @@ export default function UserPreview() {
   useEffect(() => {
     async function getUsers() {
       try {
-        const response = await fetch("/api/auth/admin/users", {
+        const response = await fetch("/api/admin/users", {
           credentials: "include",
         });
 

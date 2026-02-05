@@ -20,7 +20,7 @@ const Button = ({
     type = 'button',
     className = '',
     disabled
-}:ButtonProps)  => {   //Koristimo definiciju tipova odozgo iz interfejsa 
+}:ButtonProps)  => {   
 
   const styles = {
     login: "bg-white text-gray-700 hover:bg-pink-50 hover:text-pink-600 shadow-md",
@@ -44,7 +44,7 @@ const Button = ({
   // Ako je obično dugme
   return (
     <button 
-      type={type}  //postavlja tip dugmeta (button, submit, reset)
+      type={type}  
       onClick={onClick}
       className={buttonClass}
     >

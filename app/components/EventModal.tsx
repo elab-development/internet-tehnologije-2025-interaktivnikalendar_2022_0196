@@ -157,8 +157,6 @@ export default function EventModal({
         idCategory: formData.idCategory || null,
       };
 
-      console.log("Sending payload:", payload);
-
       const response = await fetch(url, {
         method,
         headers: {
@@ -313,7 +311,7 @@ export default function EventModal({
               onChange={(e) =>
                 setFormData({
                   ...formData,
-                  idCategory: parseInt(e.target.value),
+                  idCategory: parseInt(e.target.value), //promena kategorije
                 })
               }
               className="bg-white w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-black focus:border-2 outline-none"

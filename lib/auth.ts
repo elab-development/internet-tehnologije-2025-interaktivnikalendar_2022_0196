@@ -43,8 +43,8 @@ export function cookieOpts() {
     return {
         httpOnly: true, //javascript ne sme da pristupi
         sameSite: "lax" as const, //zastita od eksternih sajtova
-        secure: process.env.NODE_ENV === "production",  
-        path: "/",
+        secure: process.env.NODE_ENV === "production",  //salje se samo preko https
+        path: "/", //kuki vazi za ceo sajt
         maxAge: 60 * 60 * 24 * 7 //trajanje kukija
     }
 }

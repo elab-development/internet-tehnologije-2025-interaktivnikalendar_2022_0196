@@ -66,8 +66,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refresh();
   }, [refresh]);
 
-  //azuriramo memorisanu vrednost kada se neki dependency promeni
-  const value = useMemo<Ctx>(
+  //azuriramo memorisanu vrednost kada se neki dependency promeni, da se ne bi menjale sve komponende pri renderovanju
+  const value = useMemo<Ctx>(   
     () => ({ ...state, refresh, logout }),
     [state, refresh, logout],
   );

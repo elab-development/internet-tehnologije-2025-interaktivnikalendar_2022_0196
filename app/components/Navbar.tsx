@@ -68,7 +68,7 @@ const Navbar = () => {
                     ? "/userPreview"
                     : "/login"
                 }
-                className={linkClass("/kalendar")}
+                className={linkClass("/userPreview")}
                 onClick={(e) => {
                   if (user?.userRole !== "ADMIN") {
                     e.preventDefault();
@@ -121,7 +121,7 @@ const Navbar = () => {
               </div>
             </div>
           ) : (
-            /* Ako nije prijavljen, prikazujemo dugmad za login/register */
+            /* Ako nije prijavljen prikazujemo dugme za login/register */
             <>
               <Button variant="login" label="Prijavi se" href="/login" />
               <Button

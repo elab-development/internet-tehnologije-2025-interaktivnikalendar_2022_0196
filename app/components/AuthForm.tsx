@@ -25,7 +25,6 @@ export default function AuthForm({ mode }: { mode: Mode }) {
   const handleSubmit = async (e: FormEvent) => {
     //sprecava default reload
     e.preventDefault();
-
     setError("");
     setLoading(true);
 
@@ -42,7 +41,7 @@ export default function AuthForm({ mode }: { mode: Mode }) {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify(body), //mora u string jer http ne moze da salje json
       });
 
       if (!res.ok) {
