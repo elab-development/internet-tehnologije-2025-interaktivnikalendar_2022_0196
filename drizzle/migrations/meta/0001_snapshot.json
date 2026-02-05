@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "cbe10069-37e0-4690-b8c6-392a93d3c77e",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "712f16a4-d266-4015-ac5e-a7ec6c2fe666",
+  "prevId": "cbe10069-37e0-4690-b8c6-392a93d3c77e",
   "tables": {
     "category": {
       "name": "category",
@@ -23,7 +23,7 @@
         },
         "boja": {
           "name": "boja",
-          "type": "varchar(7)",
+          "type": "varchar(20)",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
