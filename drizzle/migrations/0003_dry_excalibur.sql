@@ -1,0 +1,1 @@
+ALTER TABLE `category` ADD CONSTRAINT `unique_category_naziv` UNIQUE(`naziv`);

@@ -1,0 +1,1 @@
+ALTER TABLE `recurrence` RENAME COLUMN `tip` TO `tipPonavljanja`;
