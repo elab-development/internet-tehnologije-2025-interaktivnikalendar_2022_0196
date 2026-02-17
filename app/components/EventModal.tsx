@@ -38,6 +38,9 @@ export default function EventModal({
   >([]);
 
   const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [notificationOffset, setNotificationOffset] = useState<number>(0); // 0 = bez podsetnika
+  const [notificationLoading, setNotificationLoading] = useState(false);
+  const [notificationSuccess, setNotificationSuccess] = useState("");
 
   // FETCH KATEGORIJA
   useEffect(() => {
@@ -107,11 +110,49 @@ export default function EventModal({
     }
   };
 
+  const handleSetNotification = async () => {
+    // ne radimo nista ako nije izabran offset ili nismo u update modu
+    if (!notificationOffset || !eventData?.idEvent) return;
+
+    setNotificationLoading(true);
+    setNotificationSuccess("");
+    setError("");
+
+    try {
+      const response = await fetch("/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          idEvent: eventData.idEvent,
+          vremenskiOffset: notificationOffset,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Greška pri postavljanju podsetnika");
+      }
+
+      // prikazujemo poruku o uspehu
+      setNotificationSuccess(
+        `Podsetnik postavljen — email stiže ${notificationOffset} min pre događaja`,
+      );
+      setNotificationOffset(0); // resetujemo dropdown
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setNotificationLoading(false);
+    }
+  };
+
   // Popuni formu ako je UPDATE mod
   useEffect(() => {
     if (mode === "update" && eventData && categories.length > 0) {
       //null iz baze u 0 za frontend formu
-      const categoryId = eventData.idCategory === null ? 0 : eventData.idCategory;
+      const categoryId =
+        eventData.idCategory === null ? 0 : eventData.idCategory;
 
       setFormData({
         naziv: eventData.naziv || "",
@@ -135,6 +176,8 @@ export default function EventModal({
     }
   }, [mode, eventData, categories, isOpen]);
 
+  // ZAMENI ceo handleSubmit sa ovim
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -146,7 +189,6 @@ export default function EventModal({
 
       const method = mode === "create" ? "POST" : "PUT";
 
-      //0 iz forme u null za backend
       const payload = {
         naziv: formData.naziv,
         pocetakDogadjaja: formData.pocetakDogadjaja,
@@ -159,9 +201,7 @@ export default function EventModal({
 
       const response = await fetch(url, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify(payload),
       });
@@ -175,10 +215,47 @@ export default function EventModal({
         );
       }
 
-      alert(`Događaj uspešno ${mode === "create" ? "kreiran" : "ažuriran"}!`);
+      // ako je create mod i korisnik je izabrao podsetnik, automatski ga postavljamo
+      if (mode === "create" && notificationOffset > 0) {
+        // data je novi dogadjaj koji smo upravo kreirali, iz njega uzimamo idEvent
+        const newEventId = data.idEvent;
+
+        try {
+          const notifResponse = await fetch("/api/notifications", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              idEvent: newEventId,
+              vremenskiOffset: notificationOffset,
+            }),
+          });
+
+          const notifData = await notifResponse.json();
+
+          if (!notifResponse.ok) {
+            // dogadjaj je kreiran ali podsetnik nije - prikazujemo upozorenje
+            alert(
+              `Događaj kreiran! ⚠️ Podsetnik nije postavljen: ${notifData.error}`,
+            );
+          } else {
+            alert(
+              `Događaj kreiran! ✅ Podsetnik postavljen — email stiže ${notificationOffset} min pre događaja`,
+            );
+          }
+        } catch {
+          // dogadjaj je kreiran ali podsetnik nije zbog mrežne greške
+          alert("Događaj kreiran! ⚠️ Podsetnik nije postavljen zbog greške.");
+        }
+      } else {
+        // nema podsetnika, normalna poruka
+        alert(`Događaj uspešno ${mode === "create" ? "kreiran" : "ažuriran"}!`);
+      }
+
       onSuccess();
       onClose();
 
+      // resetujemo formu ako je create mod
       if (mode === "create") {
         setFormData({
           naziv: "",
@@ -189,6 +266,7 @@ export default function EventModal({
           privatnost: "privatan",
           idCategory: 0,
         });
+        setNotificationOffset(0);
       }
     } catch (err: any) {
       console.error("Greška pri submit-u:", err);
@@ -197,7 +275,7 @@ export default function EventModal({
       setLoading(false);
     }
   };
-
+  
   if (!isOpen) return null;
 
   return (
@@ -332,7 +410,56 @@ export default function EventModal({
                 ))}
             </select>
           </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">
+              🔔 Podsetnik (email)
+            </label>
 
+            <div className="flex gap-2">
+              <select
+                value={notificationOffset}
+                onChange={(e) =>
+                  setNotificationOffset(parseInt(e.target.value))
+                }
+                className="bg-white flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-black focus:border-2 outline-none"
+              >
+                <option value={0}>Bez podsetnika</option>
+                <option value={3}>3 minuta pre</option>
+                <option value={15}>15 minuta pre</option>
+                <option value={30}>30 minuta pre</option>
+                <option value={60}>1 sat pre</option>
+                <option value={120}>2 sata pre</option>
+                <option value={1440}>1 dan pre</option>
+              </select>
+
+              {/* dugme "Postavi" se prikazuje SAMO u update modu */}
+              {mode === "update" && eventData && (
+                <button
+                  type="button"
+                  onClick={handleSetNotification}
+                  disabled={notificationOffset === 0 || notificationLoading}
+                  className="px-4 py-2 bg-pink-500 text-white rounded-lg hover:bg-pink-600 transition disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+                >
+                  {notificationLoading ? "..." : "Postavi"}
+                </button>
+              )}
+            </div>
+
+            {/* u create modu objasni korisniku da ce se automatski postaviti */}
+            {mode === "create" && notificationOffset > 0 && (
+              <p className="mt-1 text-xs text-gray-500">
+                📧 Podsetnik će biti automatski postavljen nakon kreiranja
+                događaja
+              </p>
+            )}
+
+            {/* poruka o uspehu (update mod) */}
+            {notificationSuccess && (
+              <p className="mt-2 text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">
+                {notificationSuccess}
+              </p>
+            )}
+          </div>
           {error && (
             <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
               ⚠️ {error}
