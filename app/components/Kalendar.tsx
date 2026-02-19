@@ -50,6 +50,7 @@ export default function Kalendar() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Fetch događaja
   const fetchEvents = async () => {
@@ -198,41 +199,57 @@ export default function Kalendar() {
       <div className="grid grid-cols-12 gap-8 h-full">
         <div className="col-span-3 border-r border-gray-200 pr-6">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Događaji</h2>
+          {/* Search bar */}
+          <div className="mb-4">
+            <input
+              type="text"
+              placeholder="Pretraži događaje..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500"
+            />
+          </div>
 
           {loading ? (
             <p className="text-gray-500 text-sm italic">Učitavanje...</p>
-          ) : events.length === 0 ? (
-            <p className="text-gray-500 text-sm italic">Nema događaja</p>
+          ) : events.filter((event) =>
+              event.naziv.toLowerCase().includes(searchQuery.toLowerCase()),
+            ).length === 0 ? (
+            <p className="text-gray-500 text-sm italic p-10">
+              {searchQuery ? "Nema rezultata pretrage" : "Nema događaja"}
+            </p>
           ) : (
             <div className="space-y-3">
-              {events.map((event) => {
-                const categoryColor = getCategoryColor(event);
-                const textColor = getTextColor(categoryColor);
-                
-                return (
-                  <div
-                    key={event.idEvent}
-                    className="p-3 rounded-lg hover:opacity-90 cursor-pointer transition-all"
-                    style={{
-                      backgroundColor: categoryColor,
-                      color: textColor,
-                    }}
-                    onClick={() => openUpdateModal(event)}
-                  >
-                    <h3 className="font-semibold">{event.naziv}</h3>
-                    <p className="text-xs opacity-90">
-                      {new Date(event.pocetakDogadjaja).toLocaleDateString(
-                        "sr-RS",
+              {events
+                .filter((event) =>
+                  event.naziv.toLowerCase().includes(searchQuery.toLowerCase()),
+                )
+                .map((event) => {
+                  const categoryColor = getCategoryColor(event);
+                  const textColor = getTextColor(categoryColor);
+
+                  return (
+                    <div
+                      key={event.idEvent}
+                      className="p-3 rounded-lg hover:opacity-90 cursor-pointer transition-all"
+                      style={{
+                        backgroundColor: categoryColor,
+                        color: textColor,
+                      }}
+                      onClick={() => openUpdateModal(event)}
+                    >
+                      <h3 className="font-semibold">{event.naziv}</h3>
+                      <p className="text-xs opacity-90">
+                        {new Date(event.pocetakDogadjaja).toLocaleDateString(
+                          "sr-RS",
+                        )}
+                      </p>
+                      {event.vazan && (
+                        <span className="text-xs font-bold">⭐ Važan</span>
                       )}
-                    </p>
-                    {event.vazan && (
-                      <span className="text-xs font-bold">
-                        ⭐ Važan
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
+                    </div>
+                  );
+                })}
             </div>
           )}
         </div>
@@ -345,14 +362,12 @@ export default function Kalendar() {
                     {dayEvents.map((event) => {
                       const categoryColor = getCategoryColor(event);
                       const textColor = getTextColor(categoryColor);
-                      
+
                       return (
                         <div
                           key={event.idEvent}
                           className={`text-xs p-1 rounded truncate ${
-                            event.vazan
-                              ? "border-2 border-red-500" 
-                              : ""
+                            event.vazan ? "border-2 border-red-500" : ""
                           }`}
                           style={{
                             backgroundColor: categoryColor,
@@ -383,8 +398,8 @@ export default function Kalendar() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           onSuccess={() => {
-            fetchEvents(); 
-            fetchCategories(); 
+            fetchEvents();
+            fetchCategories();
           }}
         />
       )}

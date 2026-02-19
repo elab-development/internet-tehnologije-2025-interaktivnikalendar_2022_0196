@@ -1,0 +1,1 @@
+ALTER TABLE `recurrence` MODIFY COLUMN `tipPonavljanja` varchar(50);
