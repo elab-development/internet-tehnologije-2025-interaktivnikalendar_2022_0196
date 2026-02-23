@@ -1,0 +1,19 @@
+# zavisnosti instaliraju se unutar kontejnera
+node_modules
+.next
+
+# env fajlovi ne smeju ici u image
+.env
+.env.local
+.env.production
+
+# git
+.git
+.gitignore
+
+# dokumentacija
+README.md
+
+# Docker fajlovi
+Dockerfile
+docker-compose.yml
