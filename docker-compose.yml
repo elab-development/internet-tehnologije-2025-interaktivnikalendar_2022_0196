@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # MySQL baza podataka
   mysql:
     image: mysql:8.0
     container_name: calendar-mysql
@@ -14,6 +15,38 @@ services:
       - "${MYSQL_PORT}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - calendar-network
+    # healthcheck — ceka da mysql bude spreman pre nego sto app krene
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Next.js aplikacija
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: calendar-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: mysql://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql:3306/${MYSQL_DATABASE}
+      JWT_SECRET: ${JWT_SECRET}
+      MAILTRAP_HOST: ${MAILTRAP_HOST}
+      MAILTRAP_PORT: ${MAILTRAP_PORT}
+      MAILTRAP_USER: ${MAILTRAP_USER}
+      MAILTRAP_PASS: ${MAILTRAP_PASS}
+      EMAIL_FROM: ${EMAIL_FROM}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+    depends_on:
+      mysql:
+        condition: service_healthy  # ceka da mysql bude zdrav
     networks:
       - calendar-network
 
