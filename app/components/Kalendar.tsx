@@ -110,25 +110,27 @@ export default function Kalendar() {
 
   //za vracanje boje kategorije
   const getCategoryColor = (event: Event): string => {
-    if (!event.idCategory) return "#e5e7eb"; 
-    
-    const category = categories.find(cat => cat.idCategory === event.idCategory);
+    if (!event.idCategory) return "#e5e7eb";
+
+    const category = categories.find(
+      (cat) => cat.idCategory === event.idCategory,
+    );
     return category?.boja || "#e5e7eb";
   };
 
   // Funkcija za određivanje boje teksta na osnovu pozadine
   const getTextColor = (backgroundColor: string): string => {
     // Konvertuj hex u RGB
-    const hex = backgroundColor.replace('#', '');
+    const hex = backgroundColor.replace("#", "");
     const r = parseInt(hex.substring(0, 2), 16);
     const g = parseInt(hex.substring(2, 4), 16);
     const b = parseInt(hex.substring(4, 6), 16);
-    
+
     // Izracunaj luminance
     const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-    
+
     // Ako je pozadina svetla koristi crni tekst inace beli
-    return luminance > 0.5 ? '#000000' : '#ffffff';
+    return luminance > 0.5 ? "#000000" : "#ffffff";
   };
 
   const getEventsForDay = (day: number) => {
@@ -198,7 +200,19 @@ export default function Kalendar() {
 
       <div className="grid grid-cols-12 gap-8 h-full">
         <div className="col-span-3 border-r border-gray-200 pr-6">
+          <div className="flex flex-row">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Događaji</h2>
+          <a href="/api/events/export" download="kalendar.ics">
+            <Button
+            label="Preuzmi kalendar.ics"
+            variant="register"
+            type="button"
+            className="ml-10 mt-[-5px] mb-8"
+          />
+          </a>
+          
+          </div>
+          
           {/* Search bar */}
           <div className="mb-4">
             <input
