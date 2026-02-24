@@ -13,6 +13,42 @@ interface EventModalProps {
   eventData?: Event;
 }
 
+interface NotificationItem {
+  idNotification: number;
+  zakazanoVreme: string;
+  status: string;
+  vremenskiOffset: number;
+  eventNaziv: string;
+  eventPocetak: string;
+}
+
+// konvertuje UTC ISO string u lokalno datetime-local vrednost (UTC+1)
+function utcToLocal(isoString: string): string {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  // offsetujemo za lokalnu zonu
+  const offset = date.getTimezoneOffset() * 60000;
+  const local = new Date(date.getTime() - offset);
+  return local.toISOString().slice(0, 16);
+}
+
+// konvertuje lokalni datetime-local string u UTC ISO string
+function localToUtc(localString: string): string {
+  if (!localString) return "";
+  // datetime-local vrednost je u lokalnoj zoni korisnika
+  const date = new Date(localString);
+  return date.toISOString();
+}
+
+// formatuje UTC ISO string za prikaz u lokalnoj zoni
+function formatForDisplay(isoString: string): string {
+  if (!isoString) return "";
+  return new Date(isoString).toLocaleString("sr-RS", {
+    dateStyle: "short",
+    timeStyle: "short",
+  });
+}
+
 export default function EventModal({
   isOpen,
   onClose,
@@ -27,7 +63,7 @@ export default function EventModal({
     opis: "",
     vazan: false,
     privatnost: "privatan",
-    idCategory: 0, // 0 za frontend = null za backend
+    idCategory: 0,
   });
 
   const [loading, setLoading] = useState(false);
@@ -36,73 +72,83 @@ export default function EventModal({
   const [categories, setCategories] = useState<
     { idCategory: number; naziv: string; boja: string }[]
   >([]);
-
   const [categoriesLoading, setCategoriesLoading] = useState(false);
-  const [notificationOffset, setNotificationOffset] = useState<number>(0); // 0 = bez podsetnika
+  const [notificationOffset, setNotificationOffset] = useState<number>(0);
   const [notificationLoading, setNotificationLoading] = useState(false);
-  const [notificationSuccess, setNotificationSuccess] = useState("");
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const [notificationsLoading, setNotificationsLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   // FETCH KATEGORIJA
   useEffect(() => {
     const fetchCategories = async () => {
       if (!isOpen) return;
-
       setCategoriesLoading(true);
       try {
         const response = await fetch(`/api/categories`, {
           credentials: "include",
         });
-
         const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "Greška pri učitavanju kategorija");
-        }
-
+        if (!response.ok) throw new Error(data.error || "Greška pri učitavanju kategorija");
         setCategories(data.category || []);
       } catch (err: any) {
-        console.error("Greška pri učitavanju kategorija:", err);
         setError(err.message);
       } finally {
         setCategoriesLoading(false);
       }
     };
-
     fetchCategories();
   }, [isOpen]);
 
-  const formatDateTimeLocal = (isoString: string) => {
-    if (!isoString) return "";
-    return isoString.slice(0, 16);
+  // FETCH PODSETNIKA za ovaj dogadjaj (samo update mod)
+  const fetchNotifications = async () => {
+    if (mode !== "update" || !eventData?.idEvent) return;
+    setNotificationsLoading(true);
+    try {
+      const response = await fetch("/api/notifications", {
+        credentials: "include",
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+      // filtriramo samo podsetniki za ovaj dogadjaj
+      const filtered = (data.notifications || []).filter(
+        (n: NotificationItem) => n.eventNaziv === eventData.naziv
+      );
+      setNotifications(filtered);
+    } catch (err: any) {
+      console.error("Greška pri učitavanju podsetnika:", err);
+    } finally {
+      setNotificationsLoading(false);
+    }
   };
+
+  useEffect(() => {
+    if (isOpen && mode === "update") {
+      fetchNotifications();
+    }
+    if (!isOpen) {
+      setNotifications([]);
+      setSuccessMessage("");
+      setError("");
+    }
+  }, [isOpen, mode, eventData]);
 
   // DELETE funkcija
   const handleDelete = async () => {
-    if (!eventData?.idEvent) {
-      setError("Nema ID događaja za brisanje");
-      return;
-    }
+    if (!eventData?.idEvent) return;
     setLoading(true);
     setError("");
-
     try {
       const response = await fetch(`/api/events/${eventData.idEvent}`, {
         method: "DELETE",
         credentials: "include",
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Greška pri brisanju događaja");
-      }
-
-      alert("Događaj uspešno obrisan!");
+      if (!response.ok) throw new Error(data.error || "Greška pri brisanju događaja");
       setShowDeleteConfirm(false);
       onSuccess();
       onClose();
     } catch (err: any) {
-      console.error("Greška pri brisanju:", err);
       setError(err.message);
       setShowDeleteConfirm(false);
     } finally {
@@ -111,13 +157,10 @@ export default function EventModal({
   };
 
   const handleSetNotification = async () => {
-    // ne radimo nista ako nije izabran offset ili nismo u update modu
     if (!notificationOffset || !eventData?.idEvent) return;
-
     setNotificationLoading(true);
-    setNotificationSuccess("");
+    setSuccessMessage("");
     setError("");
-
     try {
       const response = await fetch("/api/notifications", {
         method: "POST",
@@ -128,18 +171,12 @@ export default function EventModal({
           vremenskiOffset: notificationOffset,
         }),
       });
-
       const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Greška pri postavljanju podsetnika");
-      }
-
-      // prikazujemo poruku o uspehu
-      setNotificationSuccess(
-        `Podsetnik postavljen — email stiže ${notificationOffset} min pre događaja`,
-      );
-      setNotificationOffset(0); // resetujemo dropdown
+      if (!response.ok) throw new Error(data.error || "Greška pri postavljanju podsetnika");
+      setSuccessMessage(`✅ Podsetnik postavljen — email stiže ${notificationOffset} min pre događaja`);
+      setNotificationOffset(0);
+      // osvežimo listu podsetnika
+      await fetchNotifications();
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -147,17 +184,14 @@ export default function EventModal({
     }
   };
 
-  // Popuni formu ako je UPDATE mod
+  // Popuni formu ako je UPDATE mod — konvertujemo UTC iz baze u lokalno vreme
   useEffect(() => {
     if (mode === "update" && eventData && categories.length > 0) {
-      //null iz baze u 0 za frontend formu
-      const categoryId =
-        eventData.idCategory === null ? 0 : eventData.idCategory;
-
+      const categoryId = eventData.idCategory === null ? 0 : eventData.idCategory;
       setFormData({
         naziv: eventData.naziv || "",
-        pocetakDogadjaja: formatDateTimeLocal(eventData.pocetakDogadjaja) || "",
-        krajDogadjaja: formatDateTimeLocal(eventData.krajDogadjaja) || "",
+        pocetakDogadjaja: utcToLocal(eventData.pocetakDogadjaja) || "",
+        krajDogadjaja: utcToLocal(eventData.krajDogadjaja) || "",
         opis: eventData.opis || "",
         vazan: eventData.vazan || false,
         privatnost: eventData.privatnost || "privatan",
@@ -173,26 +207,26 @@ export default function EventModal({
         privatnost: "privatan",
         idCategory: 0,
       });
+      setNotificationOffset(0);
+      setSuccessMessage("");
     }
   }, [mode, eventData, categories, isOpen]);
-
-  // ZAMENI ceo handleSubmit sa ovim
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
+    setSuccessMessage("");
 
     try {
-      const url =
-        mode === "create" ? "/api/events" : `/api/events/${eventData?.idEvent}`;
-
+      const url = mode === "create" ? "/api/events" : `/api/events/${eventData?.idEvent}`;
       const method = mode === "create" ? "POST" : "PUT";
 
+      // konvertujemo lokalno vreme u UTC pre slanja na backend
       const payload = {
         naziv: formData.naziv,
-        pocetakDogadjaja: formData.pocetakDogadjaja,
-        krajDogadjaja: formData.krajDogadjaja,
+        pocetakDogadjaja: localToUtc(formData.pocetakDogadjaja),
+        krajDogadjaja: localToUtc(formData.krajDogadjaja),
         opis: formData.opis,
         vazan: formData.vazan,
         privatnost: formData.privatnost,
@@ -209,17 +243,12 @@ export default function EventModal({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(
-          data.error ||
-            `Greška pri ${mode === "create" ? "kreiranju" : "ažuriranju"} događaja`,
-        );
+        throw new Error(data.error || `Greška pri ${mode === "create" ? "kreiranju" : "ažuriranju"} događaja`);
       }
 
-      // ako je create mod i korisnik je izabrao podsetnik, automatski ga postavljamo
+      // ako je create mod i korisnik je izabrao podsetnik
       if (mode === "create" && notificationOffset > 0) {
-        // data je novi dogadjaj koji smo upravo kreirali, iz njega uzimamo idEvent
         const newEventId = data.idEvent;
-
         try {
           const notifResponse = await fetch("/api/notifications", {
             method: "POST",
@@ -230,32 +259,20 @@ export default function EventModal({
               vremenskiOffset: notificationOffset,
             }),
           });
-
           const notifData = await notifResponse.json();
-
           if (!notifResponse.ok) {
-            // dogadjaj je kreiran ali podsetnik nije - prikazujemo upozorenje
-            alert(
-              `Događaj kreiran! ⚠️ Podsetnik nije postavljen: ${notifData.error}`,
-            );
+            setSuccessMessage(`⚠️ Događaj kreiran! Podsetnik nije postavljen: ${notifData.error}`);
           } else {
-            alert(
-              `Događaj kreiran! ✅ Podsetnik postavljen — email stiže ${notificationOffset} min pre događaja`,
-            );
+            setSuccessMessage(`✅ Događaj kreiran! Podsetnik postavljen — email stiže ${notificationOffset} min pre događaja`);
           }
         } catch {
-          // dogadjaj je kreiran ali podsetnik nije zbog mrežne greške
-          alert("Događaj kreiran! ⚠️ Podsetnik nije postavljen zbog greške.");
+          setSuccessMessage("⚠️ Događaj kreiran! Podsetnik nije postavljen zbog greške.");
         }
-      } else {
-        // nema podsetnika, normalna poruka
-        alert(`Događaj uspešno ${mode === "create" ? "kreiran" : "ažuriran"}!`);
       }
 
       onSuccess();
       onClose();
 
-      // resetujemo formu ako je create mod
       if (mode === "create") {
         setFormData({
           naziv: "",
@@ -269,13 +286,12 @@ export default function EventModal({
         setNotificationOffset(0);
       }
     } catch (err: any) {
-      console.error("Greška pri submit-u:", err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
   };
-  
+
   if (!isOpen) return null;
 
   return (
@@ -291,10 +307,7 @@ export default function EventModal({
           <h2 className="text-2xl font-bold">
             {mode === "create" ? "Dodaj novi događaj" : "Izmeni događaj"}
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 text-2xl"
-          >
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700 text-2xl">
             ×
           </button>
         </div>
@@ -305,9 +318,7 @@ export default function EventModal({
               label="Naziv"
               type="text"
               value={formData.naziv}
-              onChange={(e) =>
-                setFormData({ ...formData, naziv: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, naziv: e.target.value })}
               placeholder="Unesite naziv dogadjaja"
               required
               className="bg-white"
@@ -319,9 +330,7 @@ export default function EventModal({
               label="Početak događaja"
               type="datetime-local"
               value={formData.pocetakDogadjaja}
-              onChange={(e) =>
-                setFormData({ ...formData, pocetakDogadjaja: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, pocetakDogadjaja: e.target.value })}
               required
               className="bg-white"
             />
@@ -332,9 +341,7 @@ export default function EventModal({
               label="Kraj događaja"
               type="datetime-local"
               value={formData.krajDogadjaja}
-              onChange={(e) =>
-                setFormData({ ...formData, krajDogadjaja: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, krajDogadjaja: e.target.value })}
               required
               className="bg-white"
             />
@@ -344,9 +351,7 @@ export default function EventModal({
             <label className="block text-sm font-medium mb-1">Opis</label>
             <textarea
               value={formData.opis || ""}
-              onChange={(e) =>
-                setFormData({ ...formData, opis: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, opis: e.target.value })}
               className="bg-white w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-black focus:border-2 outline-none"
               rows={3}
               placeholder="Opcionalno"
@@ -358,9 +363,7 @@ export default function EventModal({
               <input
                 type="checkbox"
                 checked={formData.vazan}
-                onChange={(e) =>
-                  setFormData({ ...formData, vazan: e.target.checked })
-                }
+                onChange={(e) => setFormData({ ...formData, vazan: e.target.checked })}
                 className="mr-2 w-4 h-4"
               />
               <span className="text-sm font-medium">Važan događaj</span>
@@ -371,9 +374,7 @@ export default function EventModal({
             <label className="block text-sm font-medium mb-1">Privatnost</label>
             <select
               value={formData.privatnost}
-              onChange={(e) =>
-                setFormData({ ...formData, privatnost: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, privatnost: e.target.value })}
               className="bg-white w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-black focus:border-2 outline-none"
             >
               <option value="privatan">Privatan</option>
@@ -381,25 +382,17 @@ export default function EventModal({
             </select>
           </div>
 
-          {/* Kategorija */}
           <div className="mb-4">
             <label className="block text-sm font-medium mb-1">Kategorija</label>
             <select
               value={formData.idCategory}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  idCategory: parseInt(e.target.value), //promena kategorije
-                })
-              }
+              onChange={(e) => setFormData({ ...formData, idCategory: parseInt(e.target.value) })}
               className="bg-white w-full px-3 py-2 border border-gray-300 rounded-lg focus:border-black focus:border-2 outline-none"
               required
               disabled={categoriesLoading}
             >
               <option value="0">
-                {categoriesLoading
-                  ? "Učitavanje kategorija..."
-                  : "Izaberite kategoriju"}
+                {categoriesLoading ? "Učitavanje kategorija..." : "Izaberite kategoriju"}
               </option>
               {categories
                 .filter((cat) => cat && cat.idCategory != null)
@@ -410,17 +403,14 @@ export default function EventModal({
                 ))}
             </select>
           </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              🔔 Podsetnik (email)
-            </label>
 
+          {/* PODSETNIK */}
+          <div className="mb-4">
+            <label className="block text-sm font-medium mb-1">🔔 Podsetnik (email)</label>
             <div className="flex gap-2">
               <select
                 value={notificationOffset}
-                onChange={(e) =>
-                  setNotificationOffset(parseInt(e.target.value))
-                }
+                onChange={(e) => setNotificationOffset(parseInt(e.target.value))}
                 className="bg-white flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:border-black focus:border-2 outline-none"
               >
                 <option value={0}>Bez podsetnika</option>
@@ -432,7 +422,6 @@ export default function EventModal({
                 <option value={1440}>1 dan pre</option>
               </select>
 
-              {/* dugme "Postavi" se prikazuje SAMO u update modu */}
               {mode === "update" && eventData && (
                 <button
                   type="button"
@@ -445,21 +434,56 @@ export default function EventModal({
               )}
             </div>
 
-            {/* u create modu objasni korisniku da ce se automatski postaviti */}
             {mode === "create" && notificationOffset > 0 && (
               <p className="mt-1 text-xs text-gray-500">
-                📧 Podsetnik će biti automatski postavljen nakon kreiranja
-                događaja
-              </p>
-            )}
-
-            {/* poruka o uspehu (update mod) */}
-            {notificationSuccess && (
-              <p className="mt-2 text-sm text-green-700 bg-green-50 px-3 py-2 rounded-lg">
-                {notificationSuccess}
+                📧 Podsetnik će biti automatski postavljen nakon kreiranja događaja
               </p>
             )}
           </div>
+
+          {/* LISTA POSTOJECIH PODSETNIKA (samo update mod) */}
+          {mode === "update" && (
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">📋 Postavljeni podsetnici</label>
+              {notificationsLoading ? (
+                <p className="text-xs text-gray-500">Učitavanje...</p>
+              ) : notifications.length === 0 ? (
+                <p className="text-xs text-gray-500 italic">Nema postavljenih podsetnika</p>
+              ) : (
+                <div className="space-y-2">
+                  {notifications.map((n) => (
+                    <div
+                      key={n.idNotification}
+                      className="flex items-center justify-between bg-white px-3 py-2 rounded-lg text-xs border border-gray-200"
+                    >
+                      <span>
+                        🕐 {formatForDisplay(n.zakazanoVreme)} — {n.vremenskiOffset} min pre
+                      </span>
+                      <span
+                        className={`px-2 py-0.5 rounded-full font-medium ${
+                          n.status === "sent"
+                            ? "bg-green-100 text-green-700"
+                            : n.status === "failed"
+                            ? "bg-red-100 text-red-700"
+                            : "bg-yellow-100 text-yellow-700"
+                        }`}
+                      >
+                        {n.status === "sent" ? "poslato" : n.status === "failed" ? "greška" : "čeka"}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* PORUKE */}
+          {successMessage && (
+            <div className="mb-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm">
+              {successMessage}
+            </div>
+          )}
+
           {error && (
             <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg text-sm">
               ⚠️ {error}
@@ -477,7 +501,6 @@ export default function EventModal({
                 disabled={loading}
               />
             )}
-
             <Button
               label="Otkaži"
               onClick={onClose}
@@ -486,7 +509,6 @@ export default function EventModal({
               className={mode === "update" ? "w-[35%]" : "w-[50%]"}
               disabled={loading}
             />
-
             <Button
               label={mode === "create" ? "Kreiraj događaj" : "Ažuriraj događaj"}
               variant="register"
@@ -507,12 +529,9 @@ export default function EventModal({
               className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl"
               onClick={(e) => e.stopPropagation()}
             >
-              <h3 className="text-lg font-bold text-gray-800 mb-2">
-                Potvrda brisanja
-              </h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Potvrda brisanja</h3>
               <p className="text-gray-600 mb-6">
-                Da li ste sigurni da želite da obrišete događaj "
-                {eventData?.naziv}"?
+                Da li ste sigurni da želite da obrišete događaj "{eventData?.naziv}"?
               </p>
               <div className="flex gap-3">
                 <button
