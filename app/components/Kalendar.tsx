@@ -4,6 +4,7 @@ import { FaArrowRight, FaArrowLeft } from "react-icons/fa";
 import Button from "./Button";
 import EventModal from "./EventModal";
 import { Event } from "@/types/event";
+import { Holiday, fetchHolidays, getHolidayForDate } from "@/lib/holidays";
 
 interface Category {
   idCategory: number;
@@ -51,6 +52,13 @@ export default function Kalendar() {
   const [loading, setLoading] = useState(true);
   const [categoriesLoading, setCategoriesLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
+
+
+  // Fetch praznika kada se promeni godina
+  useEffect(() => {
+    fetchHolidays(currentYear).then(setHolidays);
+  }, [currentYear]);
 
   // Fetch događaja
   const fetchEvents = async () => {
@@ -356,6 +364,9 @@ export default function Kalendar() {
                 currentMonth === today.getMonth() &&
                 currentYear === today.getFullYear();
 
+              const holiday = getHolidayForDate(holidays, currentYear, currentMonth, day);
+            
+
               return (
                 <div
                   key={`day-${i}`}
@@ -366,11 +377,20 @@ export default function Kalendar() {
                     {day}
                   </p>
 
+                  {/* Prikaz praznika */}
+                  {holiday && (
+                    <p className="text-[12px] rounded-lg text-white font-semibold leading-tight mb-1 bg-red-400 p-1" title={holiday.name}>
+                      {holiday.localName}
+                    </p>
+                  )}
+
                   {dayEvents.length > 0 && (
                     <p className="text-[10px] text-green-600 mb-1">
                       {dayEvents.length} događaj(a)
                     </p>
                   )}
+
+              
 
                   <div className="w-full space-y-1">
                     {dayEvents.map((event) => {
