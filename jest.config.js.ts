@@ -1,6 +1,11 @@
+const nextJest = require("next/jest");
+
+const createJestConfig = nextJest({
+  dir: "./",
+});
+
 /** @type {import('jest').Config} */
-module.exports = {
-  preset: "ts-jest",
+const customJestConfig = {
   testEnvironment: "node",
 
   moduleNameMapper: {
@@ -9,3 +14,5 @@ module.exports = {
 
   testMatch: ["**/__tests__/**/*.test.ts"],
 };
+
+module.exports = createJestConfig(customJestConfig);
