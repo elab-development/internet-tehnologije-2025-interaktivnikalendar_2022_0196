@@ -3,10 +3,6 @@ import * as jwt from "jsonwebtoken";
 export const AUTH_COOKIE = "auth"; //kuki u kome se cuvaju tokeni
 const JWT_SECRET = process.env.JWT_SECRET!;
 
-if (!JWT_SECRET) {
-  throw new Error("Missing JWT_SECRET in env file");
-}
-
 //sadrzaj tokena
 export type JwtUserClaims = {
   sub: string;
@@ -16,6 +12,8 @@ export type JwtUserClaims = {
 
 //funkcija za kreiranje tokena
 export function signAuthToken(claims: JwtUserClaims) {
+  const JWT_SECRET = process.env.JWT_SECRET;
+  if (!JWT_SECRET) throw new Error("Missing JWT_SECRET in env file");
   return jwt.sign(claims, JWT_SECRET, {
     algorithm: "HS256",
     expiresIn: "7d",
@@ -24,27 +22,28 @@ export function signAuthToken(claims: JwtUserClaims) {
 
 //funkcija za proveru tokena (proveravamo da li je korisnik prijavljen iz cookieja)
 export function verifyAuthToken(token: string) {
+  const JWT_SECRET = process.env.JWT_SECRET;
+  if (!JWT_SECRET) throw new Error("Missing JWT_SECRET in env file");
   const payload = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload &
     JwtUserClaims;
 
   if (!payload || !payload.sub || !payload.email) {
     throw new Error("Invalid token");
   }
-
   return {
     sub: payload.sub,
     email: payload.email,
-    name: payload.name
+    name: payload.name,
   };
 }
 
 //opcije za kuki
 export function cookieOpts() {
-    return {
-        httpOnly: true, //javascript ne sme da pristupi
-        sameSite: "lax" as const, //zastita od eksternih sajtova
-        secure: process.env.NODE_ENV === "production",  //salje se samo preko https
-        path: "/", //kuki vazi za ceo sajt
-        maxAge: 60 * 60 * 24 * 7 //trajanje kukija
-    }
+  return {
+    httpOnly: true, //javascript ne sme da pristupi
+    sameSite: "lax" as const, //zastita od eksternih sajtova
+    secure: process.env.NODE_ENV === "production", //salje se samo preko https
+    path: "/", //kuki vazi za ceo sajt
+    maxAge: 60 * 60 * 24 * 7, //trajanje kukija
+  };
 }

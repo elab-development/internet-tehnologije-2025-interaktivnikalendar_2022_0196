@@ -1,6 +1,5 @@
 import { POST } from "@/app/api/auth/register/route";
 
-
 jest.mock("@/db", () => ({
   db: {
     select: jest.fn(),
