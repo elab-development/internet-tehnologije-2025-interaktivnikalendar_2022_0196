@@ -81,6 +81,11 @@ const Navbar = () => {
                 Korisnici
               </Link>
             </li>
+            <li>
+              <Link href="/statistika" className={linkClass("/statistika")}>
+                Statistika
+              </Link>
+            </li>
           </ul>
         </div>
 
