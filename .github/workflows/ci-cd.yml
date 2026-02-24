@@ -4,7 +4,7 @@ on:
   push:
     branches: [project-setup-database]
   pull_request:
-    branches: [mproject-setup-database]
+    branches: [project-setup-database]
 
 jobs:
 
@@ -42,7 +42,7 @@ jobs:
     name: Gradi Docker image
     runs-on: ubuntu-latest
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/project-setup-database'
 
     permissions:
       contents: read
@@ -76,7 +76,7 @@ jobs:
     name: Deploy na Render
     runs-on: ubuntu-latest
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/project-setup-database'
 
     steps:
       - name: Trigeruj deploy na Render
