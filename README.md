@@ -1,59 +1,56 @@
-## Interaktivni kalendar
+# 📅 Interaktivni Kalendar
 
-Ovo je **interaktivni web kalendar** napravljen u React-u i Tailwind CSS-u sa podrškom za događaje, mesece, godine i važnost događaja.
-
----
+Web aplikacija za organizaciju događaja, napravljena u Next.js-u sa MySQL bazom.
 
 ## Tehnologije
-- **React / TypeScript** – frontend logika
-- **Tailwind CSS** – stilizacija i layout
-- **JavaScript / TypeScript** – dinamički prikaz i logika
-- **Bcrypt** – bezbedno hashovanje lozinki 
-- **Fetch API** – komunikacija sa backendom (login / register / events)
-- **Cookies / httpOnly** – autentifikacija i sigurnost
-- **Next.js API routes** – backend API
 
----
+- **Next.js 15** + TypeScript
+- **Tailwind CSS**
+- **MySQL** + Drizzle ORM
+- **JWT** autentifikacija (HTTP-only cookies)
+- **Mailtrap** za email notifikacije
+- **Docker** + **Docker Compose**
 
-## Funkcionalnosti
+## Pokretanje lokalno
 
-### 1. Kalendar
-- Prikaz dana u nedelji i dana u mesecu
-- Prazni div-ovi za pomeranje prvog dana meseca
-- Dinamičko renderovanje svih dana u mesecu
-- Isticanje današnjeg dana 
+```bash
+# 1. Kloniraj repo
+git clone <URL>
+cd interaktivni-kalendar
 
-### 2. Događaji
-- Dodavanje, prikaz i označavanje važnih događaja
-- Boja događaja po kategoriji i kontrastna boja teksta
-- Usable događaji sa modalom za uređivanje
-- Prikaz broja događaja po danu
-
-### 3. Mesečni i godišnji dropdown
-- Custom dropdown za izbor meseca i godine
-- Zatvaranje dropdown-a nakon izbora
-- Dinamičko menjanje trenutnog meseca i godine
-
-### 4. Autentifikacija (ako implementirana)
-- Login / Register forme
-- Bcrypt hashovanje lozinki
-- `httpOnly` cookies za sigurnost
-- AutoComplete atribut za login / register polja
-
----
-
-## Instalacija i pokretanje
-
-1. Kloniraj repozitorijum:
-git clone <URL_REPO>
-
-2.Instaliranje zavisnoti
+# 2. Instaliraj zavisnosti
 npm install
 
-3.Pokretanje servera
+# 3. Napravi .env fajl
+cp .env.example .env
+# popuni vrednosti (DATABASE_URL, JWT_SECRET, Mailtrap kredencijali...)
+
+# 4. Pokreni
 npm run dev
+```
 
-4. Otvaranje web aplikacije 
-http://localhost:3000
+Aplikacija je dostupna na `http://localhost:3000`
+
+## Pokretanje putem Dockera
+
+```bash
+# Pokreni sve servise (app + mysql)
+docker-compose up -d
+
+# Zaustavi
+docker-compose down
+```
+
+## Produkcija
+
+Aplikacija je deploovana na Render:  
+🔗 https://internet-tehnologije-2025-q93e.onrender.com
 
 
+## Autori
+
+- Teodora Mikić (2022/0196)
+- Bojana Raonić (2022/0170)
+
+Mentor: Aleksandar Joksimović  
+Fakultet organizacionih nauka, 2025.
