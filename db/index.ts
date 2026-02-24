@@ -3,7 +3,9 @@ import mysql from "mysql2/promise";
 
 const pool = mysql.createPool({
   uri: process.env.DATABASE_URL,
-  ssl: {},
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
 export const db = drizzle({ client: pool });
